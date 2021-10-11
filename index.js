@@ -21,7 +21,7 @@ app.listen(PORT, () => {
 // Requisito 1
 app.get('/talker', async (req, res) => {
   const talker = await fs.readFile('./talker.json', 'utf-8');
-  res.status(200).json(JSON.parse(talker));
+  return res.status(200).json(JSON.parse(talker));
 });
 
 // Requisito 2
@@ -38,7 +38,6 @@ app.get('/talker/:id', async (req, res) => {
 
 // Requisito 3
 function validationLogin(req, res, next) {
-  console.log(req.body);
   const { email, password } = req.body;
   const regex = /[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[com]+/i;
   if (!email) return res.status(400).json({ message: 'O campo "email" é obrigatório' });
@@ -60,8 +59,8 @@ app.post('/login', validationLogin, (req, res) => {
 // Requisito 4
 function tokenValidation(req, res, next) {
   const { authorization } = req.headers;
-  if (!authorization) res.status(401).json({ message: 'Token não encontrado' });
-  if (authorization.length < 16) res.status(401).json({ message: 'Token inválido' });
+  if (!authorization) return res.status(401).json({ message: 'Token não encontrado' });
+  if (authorization.length < 16) return res.status(401).json({ message: 'Token inválido' });
   next();
 }
 
@@ -90,7 +89,7 @@ function ageValidation(req, res, next) {
 function talkValidation(req, res, next) {
   const { talk } = req.body;
   if (!talk || !talk.watchedAt || !talk.rate) {
-    res.status(400).json({
+    return res.status(400).json({
       message: 'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
     });
   }
@@ -101,10 +100,10 @@ function watchedAtAndRateValidation(req, res, next) {
   const { talk } = req.body;
   const dateRegex = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/;
   if (!dateRegex.test(talk.watchedAt)) {
-    res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
+    return res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
   }
   if (talk.rate < 1 || talk.rate > 5) {
-    res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
+    return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
   }
   next();
 }
@@ -121,5 +120,5 @@ app.post('/talker',
   const id = talkers.length + 1;
   const newSpeakers = [...talkers, { name, age, id, talk }];
   await fs.writeFile('./talker.json', JSON.stringify(newSpeakers));
-  res.status(201).json({ name, age, id, talk });
+  return res.status(201).json({ name, age, id, talk });
 });
