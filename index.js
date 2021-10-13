@@ -20,45 +20,6 @@ app.listen(PORT, () => {
 
 const talkerDocument = ('./talker.json');
 
-// Requisito 1
-app.get('/talker', async (req, res) => {
-  const talker = await fs.readFile(talkerDocument, 'utf-8');
-  return res.status(200).json(JSON.parse(talker));
-});
-
-// Requisito 2
-app.get('/talker/:id', async (req, res) => {
-  const { id } = req.params;
-  const speakers = await fs.readFile(talkerDocument, 'utf-8');
-  const talkers = JSON.parse(speakers);
-  const talkerId = talkers.find((talker) => talker.id === parseInt(id, 10));
-  if (!talkerId) {
-    return res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
-  }
-  return res.status(200).json(talkerId);
-});
-
-// Requisito 3
-function validationLogin(req, res, next) {
-  const { email, password } = req.body;
-  const regex = /[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[com]+/i;
-  if (!email) return res.status(400).json({ message: 'O campo "email" é obrigatório' });
-  if (!regex.test(email)) {
-    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
-  }
-  if (!password) return res.status(400).json({ message: 'O campo "password" é obrigatório' });
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
-  }
-  next();
-}
-
-app.post('/login', validationLogin, (req, res) => {
-  const token = randomToken(16);
-  return res.status(200).json({ token });
-});
-
-// Requisito 4
 function tokenValidation(req, res, next) {
   const { authorization } = req.headers;
   if (!authorization) return res.status(401).json({ message: 'Token não encontrado' });
@@ -110,6 +71,58 @@ function watchedAtAndRateValidation(req, res, next) {
   next();
 }
 
+// Requisito 7
+app.get('/talker/search', tokenValidation, async (req, res) => {
+  const { q } = req.query;
+  const speakers = await fs.readFile(talkerDocument, 'utf-8');
+  const talkers = JSON.parse(speakers);
+  const talkerSearch = talkers.filter((t) => t.name.includes(q));
+
+  if (!q || q === '') return res.status(200).json(talkers);
+  if (!talkerSearch) return res.status(200).json([]);
+
+  res.status(200).json(talkerSearch);
+});
+
+// Requisito 1
+app.get('/talker', async (req, res) => {
+  const talker = await fs.readFile(talkerDocument, 'utf-8');
+  return res.status(200).json(JSON.parse(talker));
+});
+
+// Requisito 2
+app.get('/talker/:id', async (req, res) => {
+  const { id } = req.params;
+  const speakers = await fs.readFile(talkerDocument, 'utf-8');
+  const talkers = JSON.parse(speakers);
+  const talkerId = talkers.find((talker) => talker.id === parseInt(id, 10));
+  if (!talkerId) {
+    return res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
+  }
+  return res.status(200).json(talkerId);
+});
+
+// Requisito 3
+function validationLogin(req, res, next) {
+  const { email, password } = req.body;
+  const regex = /[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[com]+/i;
+  if (!email) return res.status(400).json({ message: 'O campo "email" é obrigatório' });
+  if (!regex.test(email)) {
+    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  }
+  if (!password) return res.status(400).json({ message: 'O campo "password" é obrigatório' });
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
+  next();
+}
+
+app.post('/login', validationLogin, (req, res) => {
+  const token = randomToken(16);
+  return res.status(200).json({ token });
+});
+
+// Requisito 4
 app.post('/talker',
   tokenValidation,
   nameValidation,
@@ -152,5 +165,5 @@ app.delete('/talker/:id', tokenValidation, async (req, res) => {
   talkers.splice(talkerIndex, 1);
   await fs.writeFile(talkerDocument, JSON.stringify(talkers));
 
-  res.status(200).json({ message: 'Pessoa palestrante deletada com sucesso' });
+  return res.status(200).json({ message: 'Pessoa palestrante deletada com sucesso' });
 });
