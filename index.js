@@ -18,16 +18,18 @@ app.listen(PORT, () => {
   console.log('Online');
 });
 
+const talkerDocument = ('./talker.json');
+
 // Requisito 1
 app.get('/talker', async (req, res) => {
-  const talker = await fs.readFile('./talker.json', 'utf-8');
+  const talker = await fs.readFile(talkerDocument, 'utf-8');
   return res.status(200).json(JSON.parse(talker));
 });
 
 // Requisito 2
 app.get('/talker/:id', async (req, res) => {
   const { id } = req.params;
-  const speakers = await fs.readFile('./talker.json', 'utf-8');
+  const speakers = await fs.readFile(talkerDocument, 'utf-8');
   const talkers = JSON.parse(speakers);
   const talkerId = talkers.find((talker) => talker.id === parseInt(id, 10));
   if (!talkerId) {
@@ -88,7 +90,7 @@ function ageValidation(req, res, next) {
 
 function talkValidation(req, res, next) {
   const { talk } = req.body;
-  if (!talk || !talk.watchedAt || !talk.rate) {
+  if (!talk || !talk.watchedAt || (!talk.rate && talk.rate !== 0)) {
     return res.status(400).json({
       message: 'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
     });
@@ -102,7 +104,7 @@ function watchedAtAndRateValidation(req, res, next) {
   if (!dateRegex.test(talk.watchedAt)) {
     return res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
   }
-  if (talk.rate < 1 || talk.rate > 5) {
+  if (!Number.isInteger(talk.rate) || talk.rate < 1 || talk.rate > 5) {
     return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
   }
   next();
@@ -115,10 +117,29 @@ app.post('/talker',
   talkValidation,
   watchedAtAndRateValidation, async (req, res) => {
   const { name, age, talk } = req.body;
-  const speakers = await fs.readFile('./talker.json', 'utf-8');
+  const speakers = await fs.readFile(talkerDocument, 'utf-8');
   const talkers = JSON.parse(speakers);
   const id = talkers.length + 1;
   const newSpeakers = [...talkers, { name, age, id, talk }];
-  await fs.writeFile('./talker.json', JSON.stringify(newSpeakers));
+  await fs.writeFile(talkerDocument, JSON.stringify(newSpeakers));
   return res.status(201).json({ name, age, id, talk });
+});
+
+app.put('/talker/:id',
+  tokenValidation,
+  nameValidation,
+  ageValidation,
+  talkValidation,
+  watchedAtAndRateValidation, async (req, res) => {
+  const { id } = req.params;
+  const { name, age, talk } = req.body;
+  const speakers = await fs.readFile(talkerDocument, 'utf-8');
+  const talkers = JSON.parse(speakers);
+  const talkerIndex = talkers.findIndex((t) => t.id === Number(id));
+  talkers[talkerIndex] = { 
+    ...talkers[talkerIndex], name, age, talk,
+  };
+  await fs.writeFile(talkerDocument, JSON.stringify(talkers));
+
+  return res.status(200).json(talkers[talkerIndex]);
 });
