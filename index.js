@@ -143,3 +143,14 @@ app.put('/talker/:id',
 
   return res.status(200).json(talkers[talkerIndex]);
 });
+
+app.delete('/talker/:id', tokenValidation, async (req, res) => {
+  const { id } = req.params;
+  const speakers = await fs.readFile(talkerDocument, 'utf-8');
+  const talkers = JSON.parse(speakers);
+  const talkerIndex = talkers.findIndex((t) => t.id === Number(id));
+  talkers.splice(talkerIndex, 1);
+  await fs.writeFile(talkerDocument, JSON.stringify(talkers));
+
+  res.status(200).json({ message: 'Pessoa palestrante deletada com sucesso' });
+});
