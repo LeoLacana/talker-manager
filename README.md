@@ -1,3 +1,9 @@
+# Projeto Talker Manager
+
+Desenvolvido uma API de um CRUD (**C**reate, **R**ead, **U**pdate e **D**elete) de palestrantes. Desenvolvido alguns endpoints que irão ler e escrever em um arquivo, isso utilizando o módulo `fs`.
+
+---
+
 # Habilidades Utilizada
 
 - Realizar operações assíncronas utilizando callbacks;
@@ -13,11 +19,8 @@
 - Escrever APIs utilizando Node e Express;
 - Entender a estrutura de uma aplicação Express e como organizar seu código;
 - Criar rotas e aplicar middlewares.
+
 ---
-
-## Projeto Talker Manager
-
-Desenvolvido uma API de um CRUD (**C**reate, **R**ead, **U**pdate e **D**elete) de palestrantes. Desenvolvido alguns endpoints que irão ler e escrever em um arquivo, isso utilizando o módulo `fs`.
 
 # Como Rodar o Projeto
   ```bash
